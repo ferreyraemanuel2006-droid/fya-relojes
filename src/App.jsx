@@ -344,11 +344,13 @@ function SocialBand({totalVisitas}) {
 // ============================================================
 function WatchCard({w,onSelect,onWA,isFav,onFav}) {
   const [hov,setHov]=useState(false);
+  const [activeImg,setActiveImg]=useState(0);
+  const images = Array.isArray(w.images)&&w.images.length>0 ? w.images : (w.image?[w.image]:[]);
   const disc=w.originalPrice?Math.round((1-w.price/w.originalPrice)*100):null;
   return (
     <div className="watch-card" onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}>
       <div style={{position:"relative",aspectRatio:"1",overflow:"hidden",background:"var(--navy3)"}}>
-        <img src={w.image} alt={w.name} loading="lazy" style={{width:"100%",height:"100%",objectFit:"cover",transform:hov?"scale(1.1)":"scale(1)",transition:"transform .7s ease"}}/>
+        <img src={images[activeImg]||images[0]} alt={w.name} loading="lazy" style={{width:"100%",height:"100%",objectFit:"cover",transform:hov?"scale(1.1)":"scale(1)",transition:"transform .7s ease"}}/>
         <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(13,27,42,.7) 0%,transparent 50%)",opacity:hov?1:0.4,transition:"opacity .4s"}}/>
         <div style={{position:"absolute",top:12,left:12,display:"flex",flexDirection:"column",gap:5,zIndex:2}}>
           {w.badge&&<span className={`tag ${w.badge==="OFERTA"?"tag-red":"tag-gold"}`}>{w.badge}</span>}
@@ -360,6 +362,17 @@ function WatchCard({w,onSelect,onWA,isFav,onFav}) {
         <button onClick={e=>{e.stopPropagation();onFav(w.id);}} style={{position:"absolute",bottom:12,right:12,zIndex:2,background:isFav?"var(--gold)":"rgba(13,27,42,.8)",border:`1px solid ${isFav?"var(--gold)":"var(--border)"}`,borderRadius:50,width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:"1rem",color:isFav?"var(--navy)":"var(--gold)",transition:"all .3s"}}>{isFav?"♥":"♡"}</button>
         {w.stock<=2&&<div style={{position:"absolute",bottom:12,left:12,zIndex:2,background:"rgba(192,57,43,.9)",padding:"4px 10px",fontSize:".55rem",color:"#fff",letterSpacing:".1em"}}>¡Solo {w.stock}!</div>}
       </div>
+      {/* Thumbnails — solo si hay más de 1 foto */}
+      {images.length>1&&(
+        <div style={{display:"flex",gap:4,padding:"6px 8px",background:"var(--navy3)"}}>
+          {images.map((img,i)=>(
+            <div key={i} onClick={e=>{e.stopPropagation();setActiveImg(i);}}
+              style={{flex:1,height:44,overflow:"hidden",cursor:"pointer",border:`2px solid ${activeImg===i?"var(--gold)":"transparent"}`,borderRadius:2,transition:"border-color .2s"}}>
+              <img src={img} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+            </div>
+          ))}
+        </div>
+      )}
       <div style={{padding:"22px 20px"}}>
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
           <span style={{fontSize:".55rem",letterSpacing:".2em",color:"var(--gold3)",textTransform:"uppercase"}}>{w.category}</span>
@@ -484,7 +497,11 @@ function Testimonials() {
 // ============================================================
 function ProductModal({w,onClose,onWA,isFav,onFav}) {
   const [secs,setSecs]=useState(3600*5);
+  const images = Array.isArray(w.images)&&w.images.length>0 ? w.images : (w.image?[w.image]:[]);
+  const [activeImg,setActiveImg]=useState(0);
   useEffect(()=>{registrarVistaProducto(w.id,w.name);const t=setInterval(()=>setSecs(s=>s-1),1000);return()=>clearInterval(t);},[w.id]);
+  // Reset foto activa al cambiar producto
+  useEffect(()=>setActiveImg(0),[w.id]);
   const hh=String(Math.floor(secs/3600)).padStart(2,"0");
   const mm=String(Math.floor((secs%3600)/60)).padStart(2,"0");
   const ss=String(secs%60).padStart(2,"0");
@@ -492,17 +509,43 @@ function ProductModal({w,onClose,onWA,isFav,onFav}) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div onClick={e=>e.stopPropagation()} className="modal-cols" style={{background:"var(--navy2)",border:"1px solid var(--border)",maxWidth:920,width:"100%",maxHeight:"92vh",overflow:"auto",display:"grid",gridTemplateColumns:"1fr 1fr",animation:"fadeUp .5s ease",boxShadow:"0 40px 120px rgba(0,0,0,.8)"}}>
-        <div style={{position:"relative",overflow:"hidden",background:"var(--navy3)"}}>
-          <img src={w.image} alt={w.name} style={{width:"100%",height:"100%",objectFit:"cover",minHeight:380}}/>
-          <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(13,27,42,.8) 0%,transparent 50%)"}}/>
-          <div style={{position:"absolute",bottom:20,left:20,display:"flex",alignItems:"center",gap:8,background:"rgba(13,27,42,.85)",padding:"8px 14px",border:"1px solid var(--border)"}}>
-            <span style={{color:"var(--gold)"}}>👁</span>
-            <span style={{fontSize:".65rem",color:"var(--text2)"}}>{w.views||0} vistas en esta tienda</span>
+        {/* Columna izquierda — galería */}
+        <div style={{display:"flex",flexDirection:"column",background:"var(--navy3)"}}>
+          {/* Foto principal */}
+          <div style={{position:"relative",flex:1,overflow:"hidden",minHeight:320}}>
+            <img src={images[activeImg]} alt={w.name} style={{width:"100%",height:"100%",objectFit:"cover",minHeight:320,transition:"opacity .3s"}}/>
+            <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(13,27,42,.8) 0%,transparent 50%)"}}/>
+            {/* Flechas si hay más de 1 foto */}
+            {images.length>1&&(
+              <>
+                <button onClick={e=>{e.stopPropagation();setActiveImg(i=>(i-1+images.length)%images.length);}}
+                  style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",background:"rgba(13,27,42,.75)",border:"1px solid var(--border)",color:"var(--gold)",width:34,height:34,borderRadius:50,cursor:"pointer",fontSize:"1rem",display:"flex",alignItems:"center",justifyContent:"center",zIndex:3}}>‹</button>
+                <button onClick={e=>{e.stopPropagation();setActiveImg(i=>(i+1)%images.length);}}
+                  style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"rgba(13,27,42,.75)",border:"1px solid var(--border)",color:"var(--gold)",width:34,height:34,borderRadius:50,cursor:"pointer",fontSize:"1rem",display:"flex",alignItems:"center",justifyContent:"center",zIndex:3}}>›</button>
+                {/* Contador */}
+                <div style={{position:"absolute",bottom:70,right:14,background:"rgba(13,27,42,.8)",padding:"3px 10px",fontSize:".6rem",color:"var(--text2)",borderRadius:10,zIndex:3}}>{activeImg+1}/{images.length}</div>
+              </>
+            )}
+            <div style={{position:"absolute",bottom:14,left:14,display:"flex",alignItems:"center",gap:8,background:"rgba(13,27,42,.85)",padding:"6px 12px",border:"1px solid var(--border)",zIndex:3}}>
+              <span style={{color:"var(--gold)"}}>👁</span>
+              <span style={{fontSize:".63rem",color:"var(--text2)"}}>{w.views||0} vistas</span>
+            </div>
+            <div style={{position:"absolute",top:14,left:14,display:"flex",flexDirection:"column",gap:6,zIndex:3}}>
+              {w.badge&&<span className={`tag ${w.badge==="OFERTA"?"tag-red":"tag-gold"}`}>{w.badge}</span>}
+              {disc&&<span className="tag tag-red">-{disc}% OFF</span>}
+            </div>
           </div>
-          <div style={{position:"absolute",top:16,left:16,display:"flex",flexDirection:"column",gap:6}}>
-            {w.badge&&<span className={`tag ${w.badge==="OFERTA"?"tag-red":"tag-gold"}`}>{w.badge}</span>}
-            {disc&&<span className="tag tag-red">-{disc}% OFF</span>}
-          </div>
+          {/* Thumbnails debajo — solo si hay más de 1 foto */}
+          {images.length>1&&(
+            <div style={{display:"flex",gap:4,padding:"8px",background:"var(--navy4)"}}>
+              {images.map((img,i)=>(
+                <div key={i} onClick={e=>{e.stopPropagation();setActiveImg(i);}}
+                  style={{flex:1,height:60,overflow:"hidden",cursor:"pointer",border:`2px solid ${activeImg===i?"var(--gold)":"transparent"}`,borderRadius:2,transition:"border-color .25s",opacity:activeImg===i?1:0.6}}>
+                  <img src={img} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div style={{padding:"40px 36px",overflowY:"auto"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
@@ -648,24 +691,69 @@ function convertirImgur(url) {
   return url;
 }
 
-function ProductForm({onSave,onCancel,inicial}) {
-  const empty={name:"",category:"Deportivos",price:"",originalPrice:"",image:"",desc:"",badge:"",stock:"1"};
-  const [f,setF]=useState(inicial||empty);
-  const [err,setErr]=useState("");
-  const [imgOk,setImgOk]=useState(true);
+function ImageInput({idx, url, onChangeUrl, onRemove, showRemove}) {
+  const [ok, setOk] = useState(true);
+  const handleChange = (val) => { setOk(true); onChangeUrl(idx, convertirImgur(val)); };
+  return (
+    <div style={{marginBottom:14,background:"var(--navy2)",border:"1px solid var(--border2)",padding:12,borderRadius:2}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+        <span style={{fontSize:".58rem",letterSpacing:".15em",color:"var(--gold3)",textTransform:"uppercase",fontWeight:600}}>
+          {idx===0?"📷 Foto principal (portada)":"📷 Foto "+(idx+1)}
+        </span>
+        {showRemove&&(
+          <button onClick={()=>onRemove(idx)} style={{background:"none",border:"none",cursor:"pointer",color:"var(--red)",fontSize:".75rem",padding:"2px 6px"}}>✕ quitar</button>
+        )}
+      </div>
+      <input
+        type="text"
+        placeholder="https://i.imgur.com/... o https://images.unsplash.com/..."
+        value={url}
+        onChange={e=>handleChange(e.target.value)}
+        style={{width:"100%",padding:"9px 12px",fontSize:".78rem",marginBottom:8}}
+      />
+      {url ? (
+        ok ? (
+          <img src={url} alt="preview" style={{width:"100%",height:120,objectFit:"cover",borderRadius:2,border:"1px solid var(--border2)"}}
+            onLoad={()=>setOk(true)} onError={()=>setOk(false)}/>
+        ) : (
+          <div style={{height:60,border:"1px solid var(--red)",display:"flex",alignItems:"center",justifyContent:"center",gap:8,borderRadius:2,background:"rgba(192,57,43,.08)"}}>
+            <span>⚠️</span>
+            <span style={{fontSize:".65rem",color:"#e74c3c"}}>Link inválido — usá i.imgur.com/xxx.jpg</span>
+          </div>
+        )
+      ) : (
+        <div style={{height:50,border:"1px dashed var(--border2)",display:"flex",alignItems:"center",justifyContent:"center",borderRadius:2}}>
+          <span style={{fontSize:".65rem",color:"var(--text3)"}}>Sin imagen</span>
+        </div>
+      )}
+    </div>
+  );
+}
 
-  // Cada vez que cambia la imagen reseteamos el estado de error
-  const setImagen=(url)=>{
-    const convertida=convertirImgur(url);
-    setF(prev=>({...prev,image:convertida}));
-    setImgOk(true);
+function ProductForm({onSave,onCancel,inicial}) {
+  // images es un array de hasta 4 URLs — images[0] es la portada
+  const toImages = (w) => {
+    if(!w) return [""];
+    if(Array.isArray(w.images) && w.images.length>0) return [...w.images];
+    if(w.image) return [w.image];
+    return [""];
   };
+  const empty={name:"",category:"Deportivos",price:"",originalPrice:"",desc:"",badge:"",stock:"1"};
+  const [f,setF]   = useState(inicial ? {name:inicial.name,category:inicial.category,price:String(inicial.price),originalPrice:String(inicial.originalPrice||""),desc:inicial.desc,badge:inicial.badge||"",stock:String(inicial.stock||1)} : empty);
+  const [imgs,setImgs] = useState(toImages(inicial));
+  const [err,setErr]   = useState("");
+
+  const setUrl = (idx, val) => setImgs(prev => { const a=[...prev]; a[idx]=val; return a; });
+  const addImg = () => { if(imgs.length<4) setImgs(prev=>[...prev,""]); };
+  const removeImg = (idx) => setImgs(prev=>prev.filter((_,i)=>i!==idx));
 
   const guardar=()=>{
-    if(!f.name||!f.price||!f.image||!f.desc){setErr("Nombre, precio, imagen y descripción son obligatorios");return;}
-    if(!imgOk){setErr("La imagen no carga. Verificá el link.");return;}
+    const imagesFilled = imgs.filter(u=>u.trim()!=="");
+    if(!f.name||!f.price||imagesFilled.length===0||!f.desc){setErr("Nombre, precio, al menos 1 imagen y descripción son obligatorios");return;}
     onSave({
       ...f,
+      images: imagesFilled,
+      image:  imagesFilled[0], // compatibilidad con WatchCard
       price:Number(f.price),
       originalPrice:f.originalPrice?Number(f.originalPrice):null,
       stock:Number(f.stock)||1,
@@ -685,6 +773,7 @@ function ProductForm({onSave,onCancel,inicial}) {
       <div style={{fontSize:".62rem",letterSpacing:".2em",color:"var(--gold)",textTransform:"uppercase",marginBottom:20}}>{inicial?"✏️ Editar producto":"➕ Nuevo producto"}</div>
       {err&&<div style={{background:"rgba(192,57,43,.15)",border:"1px solid var(--red)",padding:"8px 12px",fontSize:".74rem",color:"#e74c3c",marginBottom:14,borderRadius:2}}>{err}</div>}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:0}}>
+        {/* Columna izquierda — datos */}
         <div style={{paddingRight:16}}>
           {campo("name","Nombre del reloj")}
           <div style={{marginBottom:12}}>
@@ -703,60 +792,33 @@ function ProductForm({onSave,onCancel,inicial}) {
               {["OFERTA","MÁS VENDIDO","EXCLUSIVO","LUXURY","PREMIUM","ICÓNICO"].map(b=><option key={b}>{b}</option>)}
             </select>
           </div>
-        </div>
-        <div style={{paddingLeft:16}}>
-          {/* Campo imagen con conversión automática de Imgur */}
-          <div style={{marginBottom:12}}>
-            <label style={{fontSize:".58rem",letterSpacing:".12em",color:"var(--text3)",textTransform:"uppercase",display:"block",marginBottom:5}}>
-              URL de imagen
-            </label>
-            <input
-              type="text"
-              placeholder="https://i.imgur.com/... o https://images.unsplash.com/..."
-              value={f.image}
-              onChange={e=>setImagen(e.target.value)}
-              style={{width:"100%",padding:"10px 12px",fontSize:".8rem"}}
-            />
-            <div style={{fontSize:".58rem",color:"var(--text3)",marginTop:4}}>
-              💡 Podés pegar links de Imgur, Unsplash o cualquier imagen directa (.jpg .png .webp)
-            </div>
-          </div>
-
-          {/* Preview de imagen */}
-          {f.image ? (
-            <div style={{marginBottom:12}}>
-              {imgOk ? (
-                <img
-                  src={f.image}
-                  alt="preview"
-                  style={{width:"100%",height:160,objectFit:"cover",border:"1px solid var(--border2)",borderRadius:2}}
-                  onLoad={()=>setImgOk(true)}
-                  onError={()=>setImgOk(false)}
-                />
-              ) : (
-                <div style={{width:"100%",height:100,border:"1px solid var(--red)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8,borderRadius:2,background:"rgba(192,57,43,.08)"}}>
-                  <span style={{fontSize:"1.5rem"}}>⚠️</span>
-                  <div style={{fontSize:".68rem",color:"#e74c3c",textAlign:"center",padding:"0 12px"}}>
-                    La imagen no carga.<br/>
-                    <strong>Para Imgur:</strong> usá el link directo<br/>
-                    Ejemplo: <code style={{fontSize:".6rem"}}>https://i.imgur.com/f1Sf5zg.jpg</code>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div style={{width:"100%",height:100,border:"1px dashed var(--border)",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:12,borderRadius:2}}>
-              <span style={{fontSize:".72rem",color:"var(--text3)"}}>Vista previa de imagen</span>
-            </div>
-          )}
-
           <div style={{marginBottom:12}}>
             <label style={{fontSize:".58rem",letterSpacing:".12em",color:"var(--text3)",textTransform:"uppercase",display:"block",marginBottom:5}}>Descripción</label>
-            <textarea value={f.desc} onChange={e=>setF({...f,desc:e.target.value})} rows={4} style={{width:"100%",padding:"10px 12px",fontSize:".8rem",resize:"vertical"}}/>
+            <textarea value={f.desc} onChange={e=>setF({...f,desc:e.target.value})} rows={5} style={{width:"100%",padding:"10px 12px",fontSize:".8rem",resize:"vertical"}}/>
           </div>
         </div>
+        {/* Columna derecha — fotos */}
+        <div style={{paddingLeft:16}}>
+          <div style={{fontSize:".58rem",letterSpacing:".12em",color:"var(--text3)",textTransform:"uppercase",marginBottom:10}}>
+            Fotos del producto ({imgs.length}/4)
+          </div>
+          <div style={{fontSize:".62rem",color:"var(--text3)",marginBottom:12}}>
+            💡 La primera foto es la portada de la tarjeta. Podés agregar hasta 4 fotos que el cliente verá en el detalle.
+          </div>
+          {imgs.map((url,idx)=>(
+            <ImageInput key={idx} idx={idx} url={url} onChangeUrl={setUrl} onRemove={removeImg} showRemove={imgs.length>1}/>
+          ))}
+          {imgs.length<4&&(
+            <button onClick={addImg} className="btn-navy" style={{width:"100%",padding:"10px",fontSize:".68rem",borderRadius:2,marginTop:4,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+              + Agregar otra foto {imgs.length===1?"(podés hasta 4)":""}
+            </button>
+          )}
+          {imgs.length===4&&(
+            <div style={{fontSize:".62rem",color:"var(--gold3)",textAlign:"center",marginTop:4}}>Máximo de 4 fotos alcanzado</div>
+          )}
+        </div>
       </div>
-      <div style={{display:"flex",gap:10,marginTop:8}}>
+      <div style={{display:"flex",gap:10,marginTop:16}}>
         <button className="btn-gold" style={{padding:"11px 28px",fontSize:".72rem",borderRadius:2}} onClick={guardar}>💾 Guardar producto</button>
         <button className="btn-navy" style={{padding:"11px 20px",fontSize:".72rem",borderRadius:2}} onClick={onCancel}>Cancelar</button>
       </div>
@@ -909,7 +971,15 @@ function AdminDash({onClose,watchesExtra,onSaveProduct,onDeleteProduct}) {
                 <div style={{fontSize:".6rem",letterSpacing:".2em",color:"var(--gold3)",textTransform:"uppercase",marginBottom:12}}>Productos del catálogo ({todosLosWatches.length})</div>
                 {todosLosWatches.map(w=>(
                   <div key={w.id} style={{display:"flex",alignItems:"center",gap:16,padding:"14px 0",borderBottom:"1px solid var(--border2)"}}>
-                    <img src={w.image} alt={w.name} style={{width:56,height:56,objectFit:"cover",border:"1px solid var(--border2)",flexShrink:0}}/>
+                    {/* Mini galería en la lista admin */}
+                    <div style={{display:"flex",gap:3,flexShrink:0}}>
+                      {(Array.isArray(w.images)&&w.images.length>0?w.images:[w.image]).slice(0,3).map((img,i)=>(
+                        <img key={i} src={img} alt="" style={{width:i===0?56:36,height:i===0?56:36,objectFit:"cover",border:`1px solid ${i===0?"var(--border)":"var(--border2)"}`,flexShrink:0,alignSelf:"flex-start",opacity:i===0?1:0.7}}/>
+                      ))}
+                      {(Array.isArray(w.images)&&w.images.length>3)&&(
+                        <div style={{width:36,height:36,background:"var(--navy3)",border:"1px solid var(--border2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:".6rem",color:"var(--text3)"}}>+{w.images.length-3}</div>
+                      )}
+                    </div>
                     <div style={{flex:1}}>
                       <div style={{fontWeight:600,fontSize:".85rem",marginBottom:2}}>{w.name}</div>
                       <div style={{fontSize:".62rem",color:"var(--text3)"}}>{w.category} · {fmt(w.price)}{w.originalPrice?` (antes ${fmt(w.originalPrice)})`:""}</div>
