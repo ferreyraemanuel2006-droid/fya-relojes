@@ -17,20 +17,8 @@ const ADMIN_PASS  = "Em@nuel2006";
 // ============================================================
 // PRODUCTOS BASE (se fusionan con los de Firebase)
 // ============================================================
-const WATCHES_BASE = [
-  { id:1,  name:"Rolex Daytona",            category:"Deportivos", price:850000,  originalPrice:950000,  image:"https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=600&q=90",  desc:"Potencia y precisión en tu muñeca. El favorito de los campeones.",          badge:"MÁS VENDIDO", stock:3  },
-  { id:2,  name:"Rolex Datejust",            category:"Elegantes",  price:1200000, originalPrice:null,    image:"https://images.unsplash.com/photo-1587836374828-4dbafa94cf0e?w=600&q=90",  desc:"Elegancia atemporal. Cada detalle habla de distinción.",                    badge:"EXCLUSIVO",   stock:2  },
-  { id:3,  name:"Tag Heuer Formula 1",       category:"Deportivos", price:320000,  originalPrice:380000,  image:"https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?w=600&q=90",  desc:"La adrenalina de la pista en cada segundo.",                               badge:"OFERTA",      stock:5  },
-  { id:4,  name:"Omega Seamaster",           category:"Elegantes",  price:750000,  originalPrice:null,    image:"https://images.unsplash.com/photo-1548171916-7cf9e3e01b5a?w=600&q=90",  desc:"Nacido en las profundidades. Elegido por los elegantes.",                   badge:null,          stock:4  },
-  { id:5,  name:"Patek Philippe Nautilus",   category:"Luxury",     price:4500000, originalPrice:null,    image:"https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=600&q=90", desc:"La joya que se hereda. Poseer uno es un privilegio.",                       badge:"LUXURY",      stock:1  },
-  { id:6,  name:"Casio G-Shock",             category:"Deportivos", price:85000,   originalPrice:110000,  image:"https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=600&q=90",  desc:"Indestructible. Para quien no conoce límites.",                             badge:"OFERTA",      stock:8  },
-  { id:7,  name:"Hublot Big Bang",           category:"Luxury",     price:2800000, originalPrice:null,    image:"https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=600&q=90",  desc:"Arte en movimiento. Diseño que rompe esquemas.",                            badge:"PREMIUM",     stock:2  },
-  { id:8,  name:"Citizen Eco-Drive",         category:"Casual",     price:95000,   originalPrice:120000,  image:"https://images.unsplash.com/photo-1585123334904-845d60e97b29?w=600&q=90",  desc:"Tecnología solar. Elegancia cotidiana sin límites.",                        badge:"OFERTA",      stock:6  },
-  { id:9,  name:"Audemars Piguet Royal Oak", category:"Luxury",     price:3800000, originalPrice:null,    image:"https://images.unsplash.com/photo-1622434641406-a158123450f9?w=600&q=90", desc:"Ícono absoluto. El reloj que define el lujo moderno.",                      badge:"ICÓNICO",     stock:1  },
-  { id:10, name:"Tommy Hilfiger Classic",    category:"Casual",     price:65000,   originalPrice:85000,   image:"https://images.unsplash.com/photo-1539874754764-5a96559165b0?w=600&q=90",  desc:"Estilo americano. Fresco, moderno y siempre vigente.",                      badge:"OFERTA",      stock:7  },
-  { id:11, name:"Rolex Submariner",          category:"Luxury",     price:1900000, originalPrice:null,    image:"https://images.unsplash.com/photo-1490608897129-79da98d15969?w=600&q=90",  desc:"El reloj de los conquistadores. Profundidad sin límites.",                  badge:"ICÓNICO",     stock:2  },
-  { id:12, name:"Casio Edifice",             category:"Casual",     price:75000,   originalPrice:95000,   image:"https://images.unsplash.com/photo-1461018836345-45f71cdb5bc5?w=600&q=90",  desc:"Inteligente, versátil y siempre a tiempo.",                                 badge:"OFERTA",      stock:9  },
-];
+// Sin productos base — cargás los tuyos desde el panel admin
+const WATCHES_BASE = [];
 
 const TESTIMONIALS = [
   { name:"Martín G.",    city:"Buenos Aires", text:"Compré el Submariner y quedé impactado. Calidad increíble y atención personalizada.", stars:5 },
@@ -419,9 +407,21 @@ function Catalog({onSelect,favs,onFav,onWA,filterCat,watches}) {
         </div>
       </div>
       <div style={{fontSize:".65rem",color:"var(--text3)",letterSpacing:".1em",marginBottom:24,textAlign:"center"}}>{filtered.length} modelo{filtered.length!==1?"s":""} disponible{filtered.length!==1?"s":""}</div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:24}}>
-        {filtered.map(w=><WatchCard key={w.id} w={w} onSelect={onSelect} onWA={onWA} isFav={favs.includes(w.id)} onFav={onFav}/>)}
-      </div>
+      {filtered.length===0?(
+        <div style={{textAlign:"center",padding:"80px 24px",border:"1px dashed var(--border2)"}}>
+          <div style={{fontSize:"3rem",marginBottom:16}}>⌚</div>
+          <div className="serif" style={{fontSize:"1.4rem",color:"var(--text2)",marginBottom:12}}>Próximamente</div>
+          <div style={{fontSize:".8rem",color:"var(--text3)",marginBottom:24}}>Estamos preparando nuestra colección. Consultanos por WhatsApp para ver los modelos disponibles.</div>
+          <button className="btn-wa" style={{padding:"13px 28px",fontSize:".75rem",borderRadius:2,margin:"0 auto"}}
+            onClick={()=>window.open("https://wa.me/"+"5493816229294"+"?text=Hola, quiero ver los relojes disponibles","_blank")}>
+            <WaIcon/> Consultar por WhatsApp
+          </button>
+        </div>
+      ):(
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:24}}>
+          {filtered.map(w=><WatchCard key={w.id} w={w} onSelect={onSelect} onWA={onWA} isFav={favs.includes(w.id)} onFav={onFav}/>)}
+        </div>
+      )}
     </section>
   );
 }
@@ -636,13 +636,34 @@ function LoginModal({onClose,onLogin,onAdmin}) {
 // ============================================================
 // ADMIN — GESTIÓN DE PRODUCTOS
 // ============================================================
+// Convierte cualquier link de Imgur al formato directo que funciona como imagen
+function convertirImgur(url) {
+  if (!url) return url;
+  // https://imgur.com/f1Sf5zg  →  https://i.imgur.com/f1Sf5zg.jpg
+  // https://imgur.com/a/xxxxx  →  álbumes, no se pueden convertir automáticamente
+  const match = url.match(/^https?:\/\/(?:www\.)?imgur\.com\/([a-zA-Z0-9]+)$/);
+  if (match) return `https://i.imgur.com/${match[1]}.jpg`;
+  // Ya es link directo de imgur → ok
+  if (url.includes("i.imgur.com")) return url;
+  return url;
+}
+
 function ProductForm({onSave,onCancel,inicial}) {
   const empty={name:"",category:"Deportivos",price:"",originalPrice:"",image:"",desc:"",badge:"",stock:"1"};
   const [f,setF]=useState(inicial||empty);
   const [err,setErr]=useState("");
+  const [imgOk,setImgOk]=useState(true);
+
+  // Cada vez que cambia la imagen reseteamos el estado de error
+  const setImagen=(url)=>{
+    const convertida=convertirImgur(url);
+    setF(prev=>({...prev,image:convertida}));
+    setImgOk(true);
+  };
 
   const guardar=()=>{
     if(!f.name||!f.price||!f.image||!f.desc){setErr("Nombre, precio, imagen y descripción son obligatorios");return;}
+    if(!imgOk){setErr("La imagen no carga. Verificá el link.");return;}
     onSave({
       ...f,
       price:Number(f.price),
@@ -673,7 +694,7 @@ function ProductForm({onSave,onCancel,inicial}) {
             </select>
           </div>
           {campo("price","Precio ($)","number","850000")}
-          {campo("originalPrice","Precio original / tachado ($) — dejar vacío si no hay oferta","number","950000")}
+          {campo("originalPrice","Precio original / tachado ($) — vacío si no hay oferta","number","950000")}
           {campo("stock","Stock disponible","number","3")}
           <div style={{marginBottom:12}}>
             <label style={{fontSize:".58rem",letterSpacing:".12em",color:"var(--text3)",textTransform:"uppercase",display:"block",marginBottom:5}}>Badge (etiqueta)</label>
@@ -684,12 +705,51 @@ function ProductForm({onSave,onCancel,inicial}) {
           </div>
         </div>
         <div style={{paddingLeft:16}}>
-          {campo("image","URL de imagen","text","https://images.unsplash.com/...")}
-          {f.image&&(
+          {/* Campo imagen con conversión automática de Imgur */}
+          <div style={{marginBottom:12}}>
+            <label style={{fontSize:".58rem",letterSpacing:".12em",color:"var(--text3)",textTransform:"uppercase",display:"block",marginBottom:5}}>
+              URL de imagen
+            </label>
+            <input
+              type="text"
+              placeholder="https://i.imgur.com/... o https://images.unsplash.com/..."
+              value={f.image}
+              onChange={e=>setImagen(e.target.value)}
+              style={{width:"100%",padding:"10px 12px",fontSize:".8rem"}}
+            />
+            <div style={{fontSize:".58rem",color:"var(--text3)",marginTop:4}}>
+              💡 Podés pegar links de Imgur, Unsplash o cualquier imagen directa (.jpg .png .webp)
+            </div>
+          </div>
+
+          {/* Preview de imagen */}
+          {f.image ? (
             <div style={{marginBottom:12}}>
-              <img src={f.image} alt="preview" style={{width:"100%",height:140,objectFit:"cover",border:"1px solid var(--border2)"}} onError={e=>e.target.style.display="none"}/>
+              {imgOk ? (
+                <img
+                  src={f.image}
+                  alt="preview"
+                  style={{width:"100%",height:160,objectFit:"cover",border:"1px solid var(--border2)",borderRadius:2}}
+                  onLoad={()=>setImgOk(true)}
+                  onError={()=>setImgOk(false)}
+                />
+              ) : (
+                <div style={{width:"100%",height:100,border:"1px solid var(--red)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8,borderRadius:2,background:"rgba(192,57,43,.08)"}}>
+                  <span style={{fontSize:"1.5rem"}}>⚠️</span>
+                  <div style={{fontSize:".68rem",color:"#e74c3c",textAlign:"center",padding:"0 12px"}}>
+                    La imagen no carga.<br/>
+                    <strong>Para Imgur:</strong> usá el link directo<br/>
+                    Ejemplo: <code style={{fontSize:".6rem"}}>https://i.imgur.com/f1Sf5zg.jpg</code>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{width:"100%",height:100,border:"1px dashed var(--border)",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:12,borderRadius:2}}>
+              <span style={{fontSize:".72rem",color:"var(--text3)"}}>Vista previa de imagen</span>
             </div>
           )}
+
           <div style={{marginBottom:12}}>
             <label style={{fontSize:".58rem",letterSpacing:".12em",color:"var(--text3)",textTransform:"uppercase",display:"block",marginBottom:5}}>Descripción</label>
             <textarea value={f.desc} onChange={e=>setF({...f,desc:e.target.value})} rows={4} style={{width:"100%",padding:"10px 12px",fontSize:".8rem",resize:"vertical"}}/>
@@ -718,7 +778,8 @@ function AdminDash({onClose,watchesExtra,onSaveProduct,onDeleteProduct}) {
   const [showForm,setShowForm]=useState(false);
   const [editando,setEditando]=useState(null);
 
-  const todosLosWatches=[...WATCHES_BASE,...watchesExtra];
+  // Todos los productos cargados por el admin
+  const todosLosWatches=[...watchesExtra];
 
   useEffect(()=>{
     leerEstadisticas(todosLosWatches).then(s=>{setStats(s);setCargando(false);});
@@ -862,15 +923,9 @@ function AdminDash({onClose,watchesExtra,onSaveProduct,onDeleteProduct}) {
                         onClick={()=>{setEditando({...w,price:String(w.price),originalPrice:String(w.originalPrice||""),stock:String(w.stock),badge:w.badge||""});setShowForm(false);}}>
                         ✏️ Editar
                       </button>
-                      {/* Solo se pueden eliminar los productos extras (no los base) */}
-                      {watchesExtra.find(e=>e.id===w.id)&&(
-                        <button className="btn-red" style={{padding:"7px 14px",fontSize:".62rem",borderRadius:2}} onClick={()=>onDeleteProduct(w.id)}>
-                          🗑 Eliminar
-                        </button>
-                      )}
-                      {WATCHES_BASE.find(b=>b.id===w.id)&&(
-                        <span style={{fontSize:".58rem",color:"var(--text3)",alignSelf:"center"}}>Base</span>
-                      )}
+                      <button className="btn-red" style={{padding:"7px 14px",fontSize:".62rem",borderRadius:2}} onClick={()=>onDeleteProduct(w.id)}>
+                        🗑 Eliminar
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -1050,12 +1105,13 @@ export default function App() {
   // user: null = no logueado, objeto = logueado (guest o registered)
   const [user,setUser]           = useLS("fya_user_v2", null);
   const [favs,setFavs]           = useLS("fya_favs", []);
-  const [watchesExtra,setWatchesExtra] = useLS("fya_extra_watches",[]);
+  const [watchesExtra,setWatchesExtra] = useLS("fya_productos_v3",[]);
   const [stats,setStats]         = useState({totalVisitas:0,vistasProductos:[],diasSemana:[]});
   const [notifCount,setNotifCount]= useState(0);
-  const nextId                   = useLS("fya_next_id",[13]);
+  const nextId                   = useLS("fya_next_id",[1]);
 
-  const todosLosWatches = [...WATCHES_BASE,...watchesExtra].map(w=>{
+  // Todos los productos son los que cargaste vos desde el panel admin
+  const todosLosWatches = watchesExtra.map(w=>{
     const vp=stats.vistasProductos?.find(v=>v.id===w.id);
     return {...w, views: vp?.views||0};
   });
@@ -1108,10 +1164,10 @@ export default function App() {
   // Guardar producto nuevo o editado
   const handleSaveProduct=(producto,idEditar)=>{
     if(idEditar){
-      // Editar existente
-      setWatchesExtra(prev=>prev.map(w=>w.id===idEditar?{...producto,id:idEditar}:w));
-      // También permite editar los base guardando override
+      // Editar cualquier producto — simple reemplazo
+      setWatchesExtra(prev=>prev.map(w=>w.id===idEditar?{...producto,id:idEditar,views:w.views||0}:w));
     } else {
+      // Producto nuevo
       const nuevoId=nextId[0];
       setWatchesExtra(prev=>[...prev,{...producto,id:nuevoId,views:0}]);
       nextId[1]([nuevoId+1]);
